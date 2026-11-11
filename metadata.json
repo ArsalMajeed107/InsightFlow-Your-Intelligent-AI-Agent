@@ -1,0 +1,6 @@
+{
+  "name": "InsightFlow",
+  "description": "AI agent for PDF document analysis, instant summarization, multilingual chat Q&A, voice input, and searchable cloud database with real-time sync.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

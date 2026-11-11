@@ -1,0 +1,113 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidTimestamp(val) {
+      return val is timestamp;
+    }
+
+    // --- User Profile ---
+    function isValidUserProfile(data, userId) {
+      return data.userId == userId &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.email is string && data.email.size() <= 150 &&
+             data.preferredLanguage is string && data.preferredLanguage.size() <= 30 &&
+             data.darkMode is bool &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    // --- Document Item ---
+    function isValidDocumentItem(data, userId) {
+      return data.userId == userId &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 300 &&
+             data.originalFileName is string && data.originalFileName.size() <= 300 &&
+             data.fileSizeBytes is number && data.fileSizeBytes >= 0 &&
+             data.pageCount is number && data.pageCount >= 0 &&
+             data.extractedText is string &&
+             data.summary is string &&
+             data.language is string && data.language.size() <= 50 &&
+             data.tags is list &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    // --- Document Message ---
+    function isValidDocumentMessage(data, userId, docId) {
+      return data.userId == userId &&
+             data.documentId == docId &&
+             (data.role == "user" || data.role == "model") &&
+             data.content is string && data.content.size() > 0 &&
+             data.pageReferences is list &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    // --- Chat Session ---
+    function isValidChatSession(data, userId) {
+      return data.userId == userId &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.documentId is string &&
+             data.language is string && data.language.size() <= 50 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    // --- Chat Message ---
+    function isValidChatMessage(data, userId, chatId) {
+      return data.userId == userId &&
+             data.chatId == chatId &&
+             (data.role == "user" || data.role == "model") &&
+             data.content is string && data.content.size() > 0 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data, userId) &&
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       request.resource.data.userId == resource.data.userId;
+      allow delete: if isOwner(userId);
+
+      match /documents/{documentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDocumentItem(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidDocumentItem(request.resource.data, userId) &&
+                         request.resource.data.createdAt == resource.data.createdAt &&
+                         request.resource.data.userId == resource.data.userId;
+        allow delete: if isOwner(userId);
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId) && isValidDocumentMessage(request.resource.data, userId, documentId);
+          allow update: if false; // Messages are immutable
+          allow delete: if isOwner(userId);
+        }
+      }
+
+      match /chats/{chatId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidChatSession(request.resource.data, userId);
+        allow update: if isOwner(userId) && isValidChatSession(request.resource.data, userId) &&
+                         request.resource.data.createdAt == resource.data.createdAt &&
+                         request.resource.data.userId == resource.data.userId;
+        allow delete: if isOwner(userId);
+
+        match /messages/{messageId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId) && isValidChatMessage(request.resource.data, userId, chatId);
+          allow update: if false; // Messages are immutable
+          allow delete: if isOwner(userId);
+        }
+      }
+    }
+  }
+}

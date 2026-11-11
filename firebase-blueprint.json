@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "path": "/users/{userId}",
+      "fields": {
+        "userId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "preferredLanguage": { "type": "string" },
+        "darkMode": { "type": "boolean" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+    "DocumentItem": {
+      "collection": "documents",
+      "path": "/users/{userId}/documents/{documentId}",
+      "fields": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "originalFileName": { "type": "string" },
+        "fileSizeBytes": { "type": "number" },
+        "pageCount": { "type": "number" },
+        "extractedText": { "type": "string" },
+        "summary": { "type": "string" },
+        "language": { "type": "string" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+    "DocumentMessage": {
+      "collection": "messages",
+      "path": "/users/{userId}/documents/{documentId}/messages/{messageId}",
+      "fields": {
+        "userId": { "type": "string" },
+        "documentId": { "type": "string" },
+        "role": { "type": "string" },
+        "content": { "type": "string" },
+        "pageReferences": { "type": "array" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+    "ChatSession": {
+      "collection": "chats",
+      "path": "/users/{userId}/chats/{chatId}",
+      "fields": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "documentId": { "type": "string" },
+        "language": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    },
+    "ChatMessage": {
+      "collection": "messages",
+      "path": "/users/{userId}/chats/{chatId}/messages/{messageId}",
+      "fields": {
+        "userId": { "type": "string" },
+        "chatId": { "type": "string" },
+        "role": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid == userId",
+        "write": "request.auth != null && request.auth.uid == userId"
+      }
+    }
+  }
+}
